@@ -3,7 +3,7 @@ pipeline {
 
 
     parameters{
-        string(name: 'tag', defaultValue: 'vNext', description: 'Image Tag')
+        string(name: 'tag', defaultValue: 'main', description: 'Image Tag')
         booleanParam(name: 'buildAgent', defaultValue: false, description: 'Build B2B Agents')
         booleanParam(name: 'buildAgentWatcher', defaultValue: false, description: 'Build B2B Agent Watcher')
         booleanParam(name: 'cleanBuild', defaultValue: false, description: 'Clean Build')
@@ -79,6 +79,17 @@ pipeline {
                 sh "./scripts/push_ecr.sh"
             }
         }
+        stage('Push to Docker Hub') {
+            when {
+                expression {
+                    params.dockerHub  == true
+                }
+            }
+            steps {
+                sh "chmod 777 ./scripts/push_hub.sh"
+                sh "./scripts/push_hub.sh"
+            }
+        }
         stage('Save to S3') {
             when {
                 expression {
@@ -99,17 +110,6 @@ pipeline {
             steps {
                 sh "chmod 777 ./scripts/deploy.sh"
                 sh "./scripts/deploy.sh"
-            }
-        }
-        stage('Push to Docker Hub') {
-            when {
-                expression {
-                    params.dockerHub  == true
-                }
-            }
-            steps {
-                sh "chmod 777 ./scripts/push_hub.sh"
-                sh "./scripts/push_hub.sh"
             }
         }
         stage('Clean Up') {
